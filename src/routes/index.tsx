@@ -1,28 +1,99 @@
-import { component$ } from "@builder.io/qwik";
+import { component$, Resource, useResource$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
+// import styles from "./index.css?inline";
+import PocketBase from "pocketbase";
+
+import type { Post as PostModel } from "~/models/post";
 import { Post } from "../components/post/post";
-import type { Post as PostModel} from "~/models/post";
-import { randomUUID } from "crypto";
+
+interface ExpandedPostRecord {
+  id: string;
+  original: string;
+  filtered: string;
+  description: string;
+  hashtags: string;
+  expand: {
+    poster: {
+      id: string;
+      username: string;
+      name: string;
+      email: string;
+      avatar: string;
+      expand: {
+        package: {
+          id: string;
+          package: "free" | "pro" | "gold";
+          postsToday: number;
+        };
+      };
+    };
+  };
+}
 
 export default component$(() => {
-  const testUrl = "https://aadbt.lcabraja.dev/api/files/107brmbodrfbtjx/o4w81m36xogtzft/mirkooo_enahnced_dIfCOK8IZI.png";
-  const testPost: PostModel = {
-    id: randomUUID(),
-    original: testUrl,
-    filtered: testUrl,
-    description: "usagi-chan mirko desu ✌️",
-    hashtags: "#mirko #usagi",
-    poster: "lcabraja"
-  }
-  const posts = [testPost, testPost, testPost, testPost];
+  const users = useResource$<number>(async () => {
+    const pb = new PocketBase("https://aadbt.lcabraja.dev");
+    return (await pb.collection("users").getList(1, 20)).totalItems;
+  });
+
+  const feed = useResource$<PostModel[]>(async () => {
+    const pb = new PocketBase("https://aadbt.lcabraja.dev");
+    const posts = (
+      await pb.collection("posts").getList(1, 20, {
+        expand: "poster,poster.package",
+        sort: "-updated",
+      })
+    ).items;
+    return posts.map((post): PostModel => {
+      const epr = post as unknown as ExpandedPostRecord;
+      return {
+        id: epr.id,
+        original: pb.getFileUrl(post, epr.original),
+        filtered: pb.getFileUrl(post, epr.filtered),
+        description: epr.description,
+        hashtags: epr.hashtags,
+        poster: {
+          id: epr.expand.poster.id,
+          username: epr.expand.poster.username,
+          name: epr.expand.poster.name,
+          email: epr.expand.poster.email,
+          avatar: epr.expand.poster.avatar,
+          package: {
+            id: epr.expand.poster.expand.package.id,
+            package: epr.expand.poster.expand.package.package,
+            postsToday: 2,
+          },
+        },
+      };
+    });
+  });
+
   return (
     <div>
       <h1>
-        # posts today <span class="lightning">🎞️</span>
+        <Resource
+          value={users}
+          onPending={() => <div></div>}
+          onResolved={(userCount: number) => (
+            <>
+              {userCount} registered users <span class="lightning">🎞️</span>
+            </>
+          )}
+        />
       </h1>
-      {posts.map((post) => (
-        <Post post={post} />
-      ))}
+      <Resource
+        value={feed}
+        onPending={() => <>Error loading feed...</>}
+        onResolved={(posts) => {
+          return (
+            <>
+              {posts.map((post: PostModel) => (
+                <Post post={post} />
+              ))}
+            </>
+          );
+        }}
+      />
     </div>
   );
 });

@@ -1,8 +1,8 @@
 import { component$ } from "@builder.io/qwik";
-import type { Post as PostModel} from "~/models/post";
+import type { Post as PostModel } from "~/models/post";
 
 interface PostProps {
-  post: PostModel
+  post: PostModel;
 }
 
 export const Post = component$((props: PostProps) => {

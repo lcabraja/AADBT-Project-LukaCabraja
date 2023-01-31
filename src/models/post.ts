@@ -1,8 +1,10 @@
+import type { User } from "./user";
+
 export type Post = {
   id: string;
   original: string;
   filtered: string;
   description: string;
-  poster: string;
+  poster: User;
   hashtags: string;
 };
