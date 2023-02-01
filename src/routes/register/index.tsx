@@ -4,11 +4,12 @@ import {
   useClientEffect$,
   useResource$,
 } from "@builder.io/qwik";
-import PocketBase, { type AuthMethodsList } from "pocketbase";
+import { type AuthMethodsList } from "pocketbase";
+import { newPb } from "~/models/pocketbase";
 
 export default component$(() => {
   const authResource = useResource$<AuthMethodsList>(async () => {
-    const pb = new PocketBase("https://aadbt.lcabraja.dev");
+    const pb = newPb();
     return await pb.collection("users").listAuthMethods();
   });
 

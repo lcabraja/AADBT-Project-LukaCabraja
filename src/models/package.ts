@@ -1,5 +1,5 @@
 export type Package = {
   id: string;
-  package: "free" | "pro" | "gold";
+  package: "Free" | "Pro" | "Gold";
   postsToday?: number
 };

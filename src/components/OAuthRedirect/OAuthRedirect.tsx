@@ -7,7 +7,7 @@ import {
   } from "@builder.io/qwik";
   import { useLocation } from "@builder.io/qwik-city";
   import type { AuthProviderInfo } from "pocketbase";
-  import PocketBase from "pocketbase";
+import { newPb } from "~/models/pocketbase";
   
   interface RedirectProps {
     providerName: "GitHub" | "Discord" | "Google";
@@ -41,7 +41,7 @@ import {
       if (store.provider.state !== loc.query["state"]) return "State parameters don't match...";
   
       try {
-        const pb = new PocketBase("https://aadbt.lcabraja.dev");
+        const pb = newPb();
         const authData = await pb
           .collection("users")
           .authWithOAuth2(

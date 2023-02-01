@@ -5,6 +5,6 @@ export type Post = {
   original: string;
   filtered: string;
   description: string;
-  poster: User;
+  poster: User | string;
   hashtags: string;
 };

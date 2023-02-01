@@ -1,43 +1,21 @@
-import { component$, Resource, useResource$ } from "@builder.io/qwik";
+import { component$, Resource, useResource$, useStylesScoped$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-// import styles from "./index.css?inline";
-import PocketBase from "pocketbase";
 
-import type { Post as PostModel } from "~/models/post";
-import { Post } from "../components/post/post";
-
-interface ExpandedPostRecord {
-  id: string;
-  original: string;
-  filtered: string;
-  description: string;
-  hashtags: string;
-  expand: {
-    poster: {
-      id: string;
-      username: string;
-      name: string;
-      email: string;
-      avatar: string;
-      expand: {
-        package: {
-          id: string;
-          package: "free" | "pro" | "gold";
-          postsToday: number;
-        };
-      };
-    };
-  };
-}
+import { newPb } from "~/models/pocketbase";
+import { type Post as PostModel } from "~/models/post";
+import { Post } from "~/components/post/post";
+import { type ExpandedPostRecord } from "~/models/records";
+import styles from "./index.css?inline";
 
 export default component$(() => {
+  useStylesScoped$(styles);
   const users = useResource$<number>(async () => {
-    const pb = new PocketBase("https://aadbt.lcabraja.dev");
+    const pb = newPb();
     return (await pb.collection("users").getList(1, 20)).totalItems;
   });
 
   const feed = useResource$<PostModel[]>(async () => {
-    const pb = new PocketBase("https://aadbt.lcabraja.dev");
+    const pb = newPb();
     const posts = (
       await pb.collection("posts").getList(1, 20, {
         expand: "poster,poster.package",
@@ -57,11 +35,12 @@ export default component$(() => {
           username: epr.expand.poster.username,
           name: epr.expand.poster.name,
           email: epr.expand.poster.email,
-          avatar: epr.expand.poster.avatar,
+          // @ts-ignore
+          avatar: pb.getFileUrl(post.expand.poster, epr.expand.poster.avatar),
           package: {
             id: epr.expand.poster.expand.package.id,
             package: epr.expand.poster.expand.package.package,
-            postsToday: 2,
+            postsToday: posts.length,
           },
         },
       };
@@ -81,19 +60,21 @@ export default component$(() => {
           )}
         />
       </h1>
-      <Resource
-        value={feed}
-        onPending={() => <>Error loading feed...</>}
-        onResolved={(posts) => {
-          return (
-            <>
-              {posts.map((post: PostModel) => (
-                <Post post={post} />
-              ))}
-            </>
-          );
-        }}
-      />
+      <div class="feed">
+        <Resource
+          value={feed}
+          onPending={() => <>Error loading feed...</>}
+          onResolved={(posts) => {
+            return (
+              <>
+                {posts.map((post: PostModel) => (
+                  <Post post={post} />
+                ))}
+              </>
+            );
+          }}
+        />
+      </div>
     </div>
   );
 });

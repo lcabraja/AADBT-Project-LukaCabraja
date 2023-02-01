@@ -32,3 +32,8 @@ header li a {
 header li a:hover {
   text-decoration: underline;
 }
+
+header img {
+  height: 40px;
+  align-content: center;
+}
