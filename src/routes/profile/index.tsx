@@ -7,7 +7,7 @@ import {
   useStylesScoped$,
 } from "@builder.io/qwik";
 
-import { newPb } from "~/models/pocketbase";
+import { pbFactory } from "~/models/pocketbase";
 import { type PostRecord, type ExpandedUserRecord } from "~/models/records";
 import { type User } from "~/models/user";
 import type { Post as PostModel } from "~/models/post";
@@ -22,14 +22,14 @@ export default component$(() => {
   });
 
   useClientEffect$(async () => {
-    const pb = newPb();
+    const pb = pbFactory();
     store.userId = pb.authStore.model?.id;
   });
 
   const userResource = useResource$<User | undefined>(async (ctx) => {
     ctx.track(() => store.userId);
     if (store.userId === undefined) return undefined;
-    const pb = newPb();
+    const pb = pbFactory();
     const userRecord = await pb
       .collection("users")
       .getOne(store.userId as string, { expand: "package" });
@@ -54,14 +54,12 @@ export default component$(() => {
   const postsResource = useResource$<Post[] | undefined>(async (ctx) => {
     ctx.track(() => store.userId);
     if (store.userId === undefined) return undefined;
-    const pb = newPb();
+    const pb = pbFactory();
     const posts = (
-      await pb
-        .collection("posts")
-        .getList(0, 20, {
-          filter: `poster = "${store.userId}"`,
-          sort: "-created",
-        })
+      await pb.collection("posts").getList(0, 20, {
+        filter: `poster = "${store.userId}"`,
+        sort: "-created",
+      })
     ).items;
     return posts.map((post): PostModel => {
       const epr = post as unknown as PostRecord;
@@ -121,7 +119,10 @@ export default component$(() => {
                 <>
                   {posts.map((post) => (
                     <div class="post" key={post.id}>
-                      <img src={post.filtered} />
+                      <img
+                        onClick$={() => (window.location = "/edit/" + post.id)}
+                        src={post.filtered}
+                      />
                       <p>{post.hashtags}</p>
                     </div>
                   ))}

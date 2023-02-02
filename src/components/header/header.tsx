@@ -4,18 +4,16 @@ import {
   useStore,
   useStylesScoped$,
 } from "@builder.io/qwik";
-import { QwikLogo } from "../icons/qwik";
-// import PocketBase from "pocketbase";
 
 import styles from "./header.css?inline";
-import { newPb } from "~/models/pocketbase";
+import { pbFactory } from "~/models/pocketbase";
 export default component$(() => {
   useStylesScoped$(styles);
 
   const store = useStore({ loggedin: false });
 
   useClientEffect$(() => {
-    const pb = newPb();
+    const pb = pbFactory();
     store.loggedin = pb.authStore.isValid;
   });
 
@@ -30,12 +28,15 @@ export default component$(() => {
         {store.loggedin ? (
           <>
             <li>
+              <a href="/post">New Post</a>
+            </li>
+            <li>
               <a href="/profile">Profile</a>
             </li>
             <li>
               <a
                 onClick$={() => {
-                  const pb = newPb();
+                  const pb = pbFactory();
                   pb.authStore.clear();
                   store.loggedin = false;
                 }}

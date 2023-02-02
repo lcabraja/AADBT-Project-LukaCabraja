@@ -5,11 +5,11 @@ import {
   useResource$,
 } from "@builder.io/qwik";
 import { type AuthMethodsList } from "pocketbase";
-import { newPb } from "~/models/pocketbase";
+import { pbFactory } from "~/models/pocketbase";
 
 export default component$(() => {
   const authResource = useResource$<AuthMethodsList>(async () => {
-    const pb = newPb();
+    const pb = pbFactory();
     return await pb.collection("users").listAuthMethods();
   });
 

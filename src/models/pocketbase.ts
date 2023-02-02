@@ -1,5 +1,5 @@
 import PocketBase from "pocketbase";
 
-export const newPb = (): PocketBase => {
+export const pbFactory = (): PocketBase => {
     return new PocketBase("https://aadbt.lcabraja.dev");
 };

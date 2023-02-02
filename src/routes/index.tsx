@@ -1,7 +1,13 @@
-import { component$, Resource, useResource$, useStylesScoped$ } from "@builder.io/qwik";
+import {
+  component$,
+  Resource,
+  useResource$,
+  useStore,
+  useStylesScoped$,
+} from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 
-import { newPb } from "~/models/pocketbase";
+import { pbFactory } from "~/models/pocketbase";
 import { type Post as PostModel } from "~/models/post";
 import { Post } from "~/components/post/post";
 import { type ExpandedPostRecord } from "~/models/records";
@@ -9,13 +15,16 @@ import styles from "./index.css?inline";
 
 export default component$(() => {
   useStylesScoped$(styles);
+
+  const store = useStore({ search: "" });
+
   const users = useResource$<number>(async () => {
-    const pb = newPb();
+    const pb = pbFactory();
     return (await pb.collection("users").getList(1, 20)).totalItems;
   });
 
   const feed = useResource$<PostModel[]>(async () => {
-    const pb = newPb();
+    const pb = pbFactory();
     const posts = (
       await pb.collection("posts").getList(1, 20, {
         expand: "poster,poster.package",
@@ -60,6 +69,15 @@ export default component$(() => {
           )}
         />
       </h1>
+      <input
+        onInput$={(event) => {
+          const input = event.target as HTMLInputElement;
+          store.search = input.value;
+        }}
+        onChange$={() =>
+          (window.location = "/search?q=" + encodeURI(store.search))
+        }
+      />
       <div class="feed">
         <Resource
           value={feed}

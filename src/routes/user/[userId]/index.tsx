@@ -7,7 +7,7 @@ import {
   useStylesScoped$,
 } from "@builder.io/qwik";
 
-import { newPb } from "~/models/pocketbase";
+import { pbFactory } from "~/models/pocketbase";
 import { type PostRecord, type ExpandedUserRecord } from "~/models/records";
 import { type User } from "~/models/user";
 import type { Post as PostModel } from "~/models/post";
@@ -28,7 +28,7 @@ export default component$(() => {
   );
 
   const userResource = useResource$<User | undefined>(async () => {
-    const pb = newPb();
+    const pb = pbFactory();
     const userRecord = await pb
       .collection("users")
       .getOne(location.params.userId as string, { expand: "package" });
@@ -51,7 +51,7 @@ export default component$(() => {
   });
 
   const postsResource = useResource$<Post[] | undefined>(async (ctx) => {
-    const pb = newPb();
+    const pb = pbFactory();
     const posts = (
       await pb.collection("posts").getList(0, 20, {
         filter: `poster = "${location.params.userId}"`,
